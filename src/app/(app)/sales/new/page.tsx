@@ -1,26 +1,27 @@
-export default function NewSalePage() {
+import { createClient } from '@/lib/supabase/server'
+import SaleForm from '@/components/forms/SaleForm'
+
+export default async function NewSalePage() {
+  const supabase = await createClient()
+
+  const { data: products } = await supabase
+    .from('products')
+    .select('id, code, name, base_unit, package_type, units_per_package, specification, color, current_stock')
+    .eq('is_active', true)
+    .order('name')
+
   return (
     <div className="page">
       <div className="page-header">
         <h1 className="page-title">Nueva Venta</h1>
         <p className="page-subtitle">Registra una salida de inventario</p>
       </div>
-      <div className="coming-soon">
-        <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
-          <circle cx="24" cy="24" r="18" stroke="#0A0A63" strokeWidth="2" strokeOpacity="0.3"/>
-          <path d="M24 22v8M24 34h.01" stroke="#0A0A63" strokeWidth="2" strokeLinecap="round"/>
-        </svg>
-        <p>Formulario en construcción.</p>
-        <p className="coming-sub">Esta pantalla estará lista en la siguiente fase.</p>
-      </div>
+      <SaleForm products={products ?? []} />
       <style>{`
-        .page { display: flex; flex-direction: column; gap: 1rem; }
+        .page { display: flex; flex-direction: column; gap: 1rem; padding-bottom: 2rem; }
         .page-header { margin-bottom: 0.25rem; }
         .page-title { font-size: 1.4rem; font-weight: 700; color: #111827; margin: 0 0 0.2rem; font-family: 'DM Sans', sans-serif; }
         .page-subtitle { font-size: 0.8rem; color: #9ca3af; margin: 0; }
-        .coming-soon { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 3rem 1rem; text-align: center; background: white; border-radius: 16px; border: 1px solid #f3f4f6; }
-        .coming-soon p { margin: 0; font-weight: 500; color: #374151; font-size: 0.9rem; }
-        .coming-sub { font-weight: 400 !important; color: #9ca3af !important; font-size: 0.775rem !important; }
       `}</style>
     </div>
   )
