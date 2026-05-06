@@ -1,22 +1,113 @@
-# Plan: PWA de Inventario — Maranatha v1
+# Plan Expandido: PWA de Inventario — Maranatha v1
 
 ## Contexto
 
-Oscar necesita una PWA para que 4 miembros de la familia (él, papá, mamá, esposa) puedan registrar compras y ventas manualmente, y que el inventario se actualice automáticamente con cada movimiento. No existe ningún sistema previo; se parte desde cero. La base de datos estará en Supabase (PostgreSQL) y el deploy inicial en Vercel. En el futuro se migrará a un servidor propio con Cloudflare tunnel usando el dominio de Maranatha.
+Oscar necesita una PWA para que 4 miembros de la familia registren compras y ventas manualmente, actualizando el inventario automáticamente. Ya existe un sitio de Maranatha en Netlify con su dominio propio, así que el sistema de inventario vivirá en un subdominio dedicado (`inventario.maranatha.com` o similar), eliminando la dependencia de Vercel del plan original y centralizando todo en la infraestructura que ya tienen.
 
-## Stack
+---
+
+## Stack (actualizado)
 
 | Capa | Tecnología |
 |---|---|
 | Frontend | Next.js 15 (App Router) + Tailwind CSS |
-| PWA | `@ducanh2912/next-pwa` (más mantenido que next-pwa) |
-| Base de datos | Supabase (PostgreSQL) |
+| PWA | `@ducanh2912/next-pwa` |
+| Base de datos | Supabase (PostgreSQL) + RLS + Triggers |
 | Auth | Supabase Auth |
-| Deploy | Vercel → luego self-hosted + Cloudflare tunnel |
+| Deploy | **Netlify** con `@netlify/plugin-nextjs` |
+| Dominio | Subdominio del dominio Maranatha existente |
 
-## Esquema de base de datos
+---
 
-### `profiles` (extiende `auth.users` de Supabase)
+## MCPs a instalar (herramientas que Claude usará durante el build)
+
+### 1. Supabase MCP
+- **Paquete:** `@supabase/mcp-server-supabase`
+- **Para qué:** Crear tablas, triggers, RLS directamente desde Claude Code sin copiar/pegar SQL en el dashboard. También inspeccionar datos, correr migraciones, y verificar que los triggers funcionan.
+- **Configuración:** Se conecta con el Personal Access Token de Supabase + project ref.
+
+### 2. Netlify MCP
+- **Paquete:** `netlify/mcp` (oficial de Netlify)
+- **Para qué:** Crear el site en Netlify, configurar variables de entorno, asignar el subdominio, y hacer deploys — todo desde Claude Code sin tocar la UI de Netlify manualmente.
+- **Configuración:** Netlify Personal Access Token.
+
+### 3. GitHub MCP (opcional pero recomendado)
+- **Paquete:** `@modelcontextprotocol/server-github`
+- **Para qué:** Crear el repositorio, manejar PRs si el proyecto crece, integrar con Netlify CI/CD automáticamente.
+
+---
+
+## Skills de Claude Code a usar
+
+| Skill | Momento de uso |
+|---|---|
+| `init` | Al inicio — genera `CLAUDE.md` con documentación del proyecto |
+| `session-start-hook` | Para configurar el hook de inicio que levanta el servidor de dev |
+| `security-review` | Antes del deploy a producción — revisar RLS, auth guards, secrets |
+| `fewer-permission-prompts` | Después de la primera sesión de build para afinar los permisos |
+
+---
+
+## Assets necesarios
+
+### Íconos PWA (generar con una herramienta como `pwa-asset-generator`)
+```
+public/icons/
+├── icon-72x72.png
+├── icon-96x96.png
+├── icon-128x128.png
+├── icon-144x144.png
+├── icon-152x152.png
+├── icon-192x192.png    ← mínimo para Android
+├── icon-384x384.png
+├── icon-512x512.png    ← mínimo para splash
+├── apple-touch-icon.png (180x180)
+└── favicon.ico
+```
+- El ícono base puede ser el logo de Maranatha o un ícono de caja/inventario con los colores de la marca.
+- Usar `pwa-asset-generator` para generar todas las variantes desde un SVG fuente.
+
+### Colores PWA en `manifest.json`
+- `theme_color` y `background_color` deben coincidir con la paleta de Maranatha para que la splash screen y la barra del sistema se vean consistentes.
+
+---
+
+## Estrategia de Deploy: Netlify + Subdominio
+
+```
+maranatha.com          ← sitio principal (ya existe en Netlify)
+inventario.maranatha.com  ← nueva app (nuevo site en Netlify)
+```
+
+### Pasos de configuración del subdominio:
+1. Crear un nuevo site en Netlify (via MCP o UI) para el inventario.
+2. En la configuración de dominio del sitio principal de Maranatha en Netlify → agregar custom domain `inventario.maranatha.com`.
+3. En el proveedor DNS del dominio Maranatha → agregar registro CNAME:
+   ```
+   inventario  CNAME  [netlify-site-name].netlify.app
+   ```
+4. Netlify provee SSL automático vía Let's Encrypt — el subdominio queda HTTPS sin configuración extra.
+
+### Variables de entorno en Netlify (via MCP):
+```
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY  ← solo para server-side, nunca al cliente
+```
+
+### Plugin de Next.js para Netlify:
+```toml
+# netlify.toml
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+```
+Esto habilita SSR, middleware de auth, y API routes — necesarios para Supabase Auth con cookies.
+
+---
+
+## Esquema de base de datos (sin cambios del plan original)
+
+### `profiles`
 ```sql
 id uuid references auth.users primary key
 name text not null
@@ -29,15 +120,15 @@ created_at timestamptz default now()
 id uuid primary key default gen_random_uuid()
 name text not null
 description text
-unit text not null  -- 'unidad', 'caja', 'resma', etc.
+unit text not null
 current_stock numeric not null default 0
-min_stock numeric default 0  -- para alertas futuras
+min_stock numeric default 0
 is_active boolean default true
 created_at timestamptz default now()
 updated_at timestamptz default now()
 ```
 
-### `purchases` (compras — aumentan inventario)
+### `purchases`
 ```sql
 id uuid primary key default gen_random_uuid()
 product_id uuid references products not null
@@ -51,7 +142,7 @@ purchase_date date not null default current_date
 created_at timestamptz default now()
 ```
 
-### `sales` (ventas — disminuyen inventario)
+### `sales`
 ```sql
 id uuid primary key default gen_random_uuid()
 product_id uuid references products not null
@@ -65,113 +156,102 @@ sale_date date not null default current_date
 created_at timestamptz default now()
 ```
 
-El inventario se actualiza mediante **triggers en Supabase** (PostgreSQL):
+**Triggers:**
 - `after insert on purchases` → `current_stock += quantity`
 - `after insert on sales` → `current_stock -= quantity`
 
-## Roles
+---
 
-| Rol | Permisos |
-|---|---|
-| `admin` | Todo: gestionar productos, ver reportes, registrar movimientos |
-| `operator` | Registrar compras y ventas, ver inventario |
+## Secuencia de implementación (detallada)
 
-Los permisos se aplican con **Row Level Security (RLS)** en Supabase y con guards en la UI de Next.js.
+```
+Fase 0: Setup
+  └── Instalar MCPs (Supabase + Netlify)
+  └── Crear repo en GitHub
+  └── npx create-next-app + Tailwind
+  └── /init → genera CLAUDE.md
+  └── /session-start-hook → hook de dev server
 
-Para v1: Oscar será `admin`. Los demás `operator`. Cuando se defina qué puede hacer cada quien, se ajustan los roles sin cambiar la arquitectura.
+Fase 1: Base de datos (via Supabase MCP)
+  └── Crear tablas (profiles, products, purchases, sales)
+  └── Crear triggers de stock
+  └── Configurar RLS por rol
+  └── Crear 4 usuarios en Supabase Auth
+
+Fase 2: Auth en Next.js
+  └── Configurar middleware de Supabase + cookies
+  └── Página de login
+  └── Auth guard en layout del grupo (app)
+
+Fase 3: Features (en orden)
+  └── Dashboard: lista de productos con stock
+  └── Registrar compra (form → insert → trigger)
+  └── Registrar venta (form → validar stock → insert → trigger)
+  └── Historial de compras (con filtros)
+  └── Historial de ventas (con filtros)
+  └── Gestión de productos (solo admin)
+
+Fase 4: PWA
+  └── Generar íconos con pwa-asset-generator
+  └── manifest.json con colores Maranatha
+  └── Configurar @ducanh2912/next-pwa
+
+Fase 5: Deploy
+  └── /security-review antes del push
+  └── Crear site en Netlify (via MCP)
+  └── Configurar env vars (via MCP)
+  └── Agregar netlify.toml + @netlify/plugin-nextjs
+  └── Push → CI/CD automático
+  └── Configurar subdominio inventario.maranatha.com
+
+Fase 6: QA
+  └── Probar desde móvil: instalar como PWA
+  └── Probar flujo completo: compra → stock sube
+  └── Probar flujo completo: venta → stock baja
+  └── Probar guard: venta > stock → rechazado
+  └── Probar roles: operator no ve /products
+```
+
+---
 
 ## Estructura del proyecto
 
 ```
 maranatha-inventory/
 ├── app/
-│   ├── (auth)/
-│   │   └── login/page.tsx
+│   ├── (auth)/login/page.tsx
 │   ├── (app)/
-│   │   ├── layout.tsx          ← navbar + auth guard
-│   │   ├── dashboard/page.tsx  ← inventario actual
+│   │   ├── layout.tsx            ← navbar + auth guard
+│   │   ├── dashboard/page.tsx
 │   │   ├── purchases/
-│   │   │   ├── page.tsx        ← historial de compras
-│   │   │   └── new/page.tsx    ← registrar compra
+│   │   │   ├── page.tsx
+│   │   │   └── new/page.tsx
 │   │   ├── sales/
-│   │   │   ├── page.tsx        ← historial de ventas
-│   │   │   └── new/page.tsx    ← registrar venta
-│   │   └── products/
-│   │       └── page.tsx        ← gestión de productos (solo admin)
-├── components/
-│   ├── ui/                     ← botones, inputs, cards
-│   ├── inventory/
-│   ├── purchases/
-│   └── sales/
-├── lib/
-│   └── supabase/
-│       ├── client.ts
-│       ├── server.ts
-│       └── types.ts            ← tipos generados de Supabase
-└── public/
-    ├── manifest.json           ← PWA manifest
-    └── icons/                  ← íconos PWA
+│   │   │   ├── page.tsx
+│   │   │   └── new/page.tsx
+│   │   └── products/page.tsx     ← solo admin
+├── components/ui/
+├── lib/supabase/
+│   ├── client.ts
+│   ├── server.ts
+│   └── types.ts
+├── public/
+│   ├── manifest.json
+│   └── icons/
+├── netlify.toml
+└── CLAUDE.md
 ```
 
-## Páginas y funcionalidad de v1
+---
 
-### Login
-- Email + password via Supabase Auth
-- Los 4 usuarios se crean manualmente en Supabase Dashboard
+## Verificación final
 
-### Dashboard (`/dashboard`)
-- Tarjetas por producto: nombre, stock actual, unidad
-- Indicador visual si el stock está bajo (< min_stock)
-- Accesible para todos los roles
-
-### Registrar compra (`/purchases/new`)
-- Select: producto
-- Inputs: cantidad, costo unitario, proveedor, fecha, notas
-- Al guardar: inserta en `purchases` → trigger actualiza stock
-- Accesible: admin y operator
-
-### Registrar venta (`/sales/new`)
-- Select: producto
-- Inputs: cantidad, precio unitario, cliente, fecha, notas
-- Al guardar: inserta en `sales` → trigger actualiza stock
-- Validación: no puede vender más de lo que hay en stock
-- Accesible: admin y operator
-
-### Historial (`/purchases` y `/sales`)
-- Lista de movimientos en orden cronológico
-- Filtros básicos: por fecha, por producto
-- Accesible: todos
-
-### Gestión de productos (`/products`) — solo admin
-- Agregar, editar, activar/desactivar productos
-- Campos: nombre, descripción, unidad, stock mínimo
-
-## PWA (instalable en móvil)
-
-- `manifest.json` con nombre, colores, íconos
-- Service worker para cachear la app shell
-- El usuario puede instalar desde el navegador del celular como app nativa
-- Funciona bien en iOS Safari y Android Chrome
-
-## Secuencia de implementación
-
-1. Inicializar proyecto Next.js + Tailwind + Supabase client
-2. Crear esquema SQL en Supabase (tablas + triggers + RLS)
-3. Configurar autenticación (Supabase Auth + middleware Next.js)
-4. Dashboard: listar productos con stock
-5. Formulario registrar compra
-6. Formulario registrar venta (con validación de stock)
-7. Historial de movimientos
-8. Gestión de productos (admin)
-9. Configurar PWA (manifest + service worker)
-10. Deploy en Vercel
-
-## Verificación al terminar
-
-- Iniciar sesión desde el celular, instalar como app (PWA)
-- Agregar un producto y verificar que aparece en el dashboard
-- Registrar una compra → stock sube
-- Registrar una venta → stock baja
-- Intentar vender más de lo que hay → debe rechazarlo
-- Verificar historial de ambos movimientos
-- Verificar que un `operator` no ve la pantalla de productos
+- Abrir `inventario.maranatha.com` desde el celular
+- Instalar como app (PWA) en iOS y Android
+- Login como admin (Oscar): ver todos los menús
+- Login como operator: no ver /products
+- Registrar compra → dashboard muestra stock actualizado
+- Registrar venta → stock baja correctamente
+- Intentar vender más de lo existente → error claro al usuario
+- Ver historial filtrado por fecha y producto
+- Verificar HTTPS con candado en el subdominio

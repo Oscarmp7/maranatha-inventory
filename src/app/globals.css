@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* Maranatha brand colors */
+  --color-brand-deep: #0A0A63;
+  --color-brand-primary: #1C1C9B;
+  --color-brand-light: #2d2db8;
+
+  /* Surface colors */
+  --color-surface: #ffffff;
+  --color-surface-subtle: #f5f5f5;
+  --color-surface-muted: #f0f0f8;
+
+  /* Sidebar */
+  --color-sidebar: #0A0A63;
+  --color-sidebar-hover: rgba(255,255,255,0.08);
+  --color-sidebar-active: rgba(255,255,255,0.15);
+
+  /* Semantic */
+  --color-success: #16a34a;
+  --color-danger: #dc2626;
+  --color-warning: #d97706;
+
+  /* Text */
+  --color-text-primary: #111827;
+  --color-text-muted: #6b7280;
+  --color-text-inverse: #ffffff;
+
+  /* Fonts */
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* PWA safe area */
+:root {
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
