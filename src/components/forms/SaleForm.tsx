@@ -143,11 +143,9 @@ export default function SaleForm({ products: initialProducts }: Props) {
             </button>
           )}
         </div>
-        {showList && !selected && (
+        {showList && !selected && filtered.length > 0 && (
           <div className="product-list" onMouseDown={e => e.preventDefault()}>
-            {filtered.length === 0 ? (
-              <div className="list-empty">Sin resultados para "{query}"</div>
-            ) : filtered.map(p => (
+            {filtered.map(p => (
               <button key={p.id} type="button" className="product-item" onClick={() => handleSelect(p)}>
                 <span className="item-name">{p.name}</span>
                 <span className="item-meta">
@@ -156,11 +154,16 @@ export default function SaleForm({ products: initialProducts }: Props) {
                 </span>
               </button>
             ))}
-            <button type="button" className="add-product-btn" onClick={openCreate}>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-              Añadir{query.trim() ? ` "${query.trim()}"` : ' nuevo producto'}
-            </button>
           </div>
+        )}
+
+        {!selected && !showCreate && (
+          <button type="button" className="add-product-btn-static" onClick={openCreate}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+            {query.trim() && filtered.length === 0
+              ? `Añadir "${query.trim()}" como nuevo producto`
+              : 'Añadir nuevo producto'}
+          </button>
         )}
         {selected && (
           <div className="selected-chip">
@@ -346,13 +349,14 @@ export default function SaleForm({ products: initialProducts }: Props) {
         .item-name { font-size: 0.875rem; font-weight: 500; color: #111827; }
         .item-meta { font-size: 0.7rem; color: #9ca3af; }
         .stock-zero { color: #ef4444 !important; }
-        .add-product-btn {
-          display: flex; align-items: center; gap: 0.5rem; padding: 0.65rem 0.875rem;
-          width: 100%; background: none; border: none; border-top: 1px solid #e5e7eb;
-          text-align: left; cursor: pointer; font-size: 0.825rem; font-weight: 600;
-          color: #0A0A63; font-family: 'DM Sans', sans-serif; touch-action: manipulation;
+        .add-product-btn-static {
+          display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.875rem;
+          width: 100%; background: #f0f4ff; border: 1.5px dashed #c7d2fe;
+          border-radius: 10px; text-align: left; cursor: pointer; font-size: 0.825rem;
+          font-weight: 600; color: #0A0A63; font-family: 'DM Sans', sans-serif;
+          touch-action: manipulation; margin-top: 0.25rem; transition: background 0.15s;
         }
-        .add-product-btn:active { background: #f0f4ff; }
+        .add-product-btn-static:active { background: #e0e7ff; }
 
         .selected-chip {
           display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem;
