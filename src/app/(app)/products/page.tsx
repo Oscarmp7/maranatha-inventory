@@ -31,11 +31,13 @@ export default async function ProductsPage() {
 
       {active.length === 0 && inactive.length === 0 ? (
         <div className="page-empty">
-          <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
-            <rect x="8" y="8" width="32" height="32" rx="6" stroke="#d1d5db" strokeWidth="2"/>
-            <path d="M16 20h16M16 27h10" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-          <p>No hay productos registrados.</p>
+          <div className="page-empty-icon">
+            <svg viewBox="0 0 40 40" fill="none" width="40" height="40" aria-hidden="true">
+              <rect x="7" y="7" width="26" height="26" rx="5" stroke="#0A0A63" strokeWidth="1.75" strokeOpacity="0.25"/>
+              <path d="M13 16h14M13 22h10" stroke="#0A0A63" strokeWidth="1.75" strokeOpacity="0.35" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <p>Sin productos registrados</p>
           <p className="page-empty-sub">Importa el inventario desde el Excel para comenzar.</p>
         </div>
       ) : (
@@ -93,9 +95,10 @@ export default async function ProductsPage() {
         .page-title { font-size: 1.4rem; font-weight: 700; color: #111827; margin: 0 0 0.2rem; font-family: 'DM Sans', sans-serif; }
         .page-subtitle { font-size: 0.8rem; color: #9ca3af; margin: 0; }
 
-        .page-empty { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 3rem 1rem; text-align: center; }
-        .page-empty p { margin: 0; font-weight: 500; color: #6b7280; font-size: 0.875rem; }
-        .page-empty-sub { font-size: 0.775rem !important; font-weight: 400 !important; color: #9ca3af !important; }
+        .page-empty { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 2rem 1rem 1.5rem; text-align: center; background: white; border-radius: 16px; border: 1px solid #f0f0f5; }
+        .page-empty-icon { width: 64px; height: 64px; border-radius: 16px; background: #f4f4fc; display: flex; align-items: center; justify-content: center; margin-bottom: 0.25rem; }
+        .page-empty p { margin: 0; font-weight: 600; color: #374151; font-size: 0.875rem; }
+        .page-empty-sub { font-size: 0.775rem !important; font-weight: 400 !important; color: #9ca3af !important; max-width: 240px; line-height: 1.5; }
 
         .product-list { display: flex; flex-direction: column; gap: 0.5rem; }
         .section-label { font-size: 0.72rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.06em; margin: 0.5rem 0 0; }

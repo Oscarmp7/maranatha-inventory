@@ -19,12 +19,14 @@ export default async function SalesPage() {
 
       {!sales || sales.length === 0 ? (
         <div className="page-empty">
-          <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
-            <circle cx="24" cy="24" r="18" stroke="#d1d5db" strokeWidth="2"/>
-            <path d="M24 14v20M18 20l6-6 6 6" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <p>No hay ventas aún.</p>
-          <p className="page-empty-sub">Usa el botón + para registrar una venta.</p>
+          <div className="page-empty-icon">
+            <svg viewBox="0 0 40 40" fill="none" width="40" height="40" aria-hidden="true">
+              <rect x="7" y="10" width="26" height="20" rx="4" stroke="#059669" strokeWidth="1.75" strokeOpacity="0.3"/>
+              <path d="M20 14v12M15 19h10" stroke="#059669" strokeWidth="1.75" strokeOpacity="0.4" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <p>Sin ventas registradas</p>
+          <p className="page-empty-sub">Toca el botón + para registrar tu primera venta.</p>
         </div>
       ) : (
         <div className="tx-list">
@@ -52,9 +54,10 @@ export default async function SalesPage() {
         .page-header { margin-bottom: 0.25rem; }
         .page-title { font-size: 1.4rem; font-weight: 700; color: #111827; margin: 0 0 0.2rem; font-family: 'DM Sans', sans-serif; }
         .page-subtitle { font-size: 0.8rem; color: #9ca3af; margin: 0; }
-        .page-empty { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 3rem 1rem; text-align: center; }
-        .page-empty p { margin: 0; font-weight: 500; color: #6b7280; font-size: 0.875rem; }
-        .page-empty-sub { font-size: 0.775rem !important; font-weight: 400 !important; color: #9ca3af !important; }
+        .page-empty { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 2rem 1rem 1.5rem; text-align: center; background: white; border-radius: 16px; border: 1px solid #f0f0f5; }
+        .page-empty-icon { width: 64px; height: 64px; border-radius: 16px; background: #f0fdf4; display: flex; align-items: center; justify-content: center; margin-bottom: 0.25rem; }
+        .page-empty p { margin: 0; font-weight: 600; color: #374151; font-size: 0.875rem; }
+        .page-empty-sub { font-size: 0.775rem !important; font-weight: 400 !important; color: #9ca3af !important; max-width: 240px; line-height: 1.5; }
         .tx-list { display: flex; flex-direction: column; gap: 0.5rem; }
         .tx-card { display: flex; align-items: center; justify-content: space-between; background: white; border-radius: 12px; padding: 0.875rem 1rem; border: 1px solid #f3f4f6; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
         .tx-info { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }

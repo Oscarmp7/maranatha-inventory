@@ -19,12 +19,14 @@ export default async function PurchasesPage() {
 
       {!purchases || purchases.length === 0 ? (
         <div className="page-empty">
-          <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
-            <path d="M6 12l18-8 18 8v26a2 2 0 01-2 2H8a2 2 0 01-2-2V12z" stroke="#d1d5db" strokeWidth="2"/>
-            <path d="M24 34V22M18 28h12" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-          <p>No hay compras aún.</p>
-          <p className="page-empty-sub">Usa el botón + para registrar una compra.</p>
+          <div className="page-empty-icon">
+            <svg viewBox="0 0 40 40" fill="none" width="40" height="40" aria-hidden="true">
+              <path d="M8 14l12-6 12 6v16a2 2 0 01-2 2H10a2 2 0 01-2-2V14z" stroke="#0A0A63" strokeWidth="1.75" strokeOpacity="0.3" strokeLinejoin="round"/>
+              <path d="M15 32V20h10v12" stroke="#0A0A63" strokeWidth="1.75" strokeOpacity="0.3" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <p>Sin compras registradas</p>
+          <p className="page-empty-sub">Toca el botón + para registrar tu primera compra.</p>
         </div>
       ) : (
         <div className="tx-list">
@@ -52,9 +54,10 @@ export default async function PurchasesPage() {
         .page-header { margin-bottom: 0.25rem; }
         .page-title { font-size: 1.4rem; font-weight: 700; color: #111827; margin: 0 0 0.2rem; font-family: 'DM Sans', sans-serif; }
         .page-subtitle { font-size: 0.8rem; color: #9ca3af; margin: 0; }
-        .page-empty { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 3rem 1rem; text-align: center; }
-        .page-empty p { margin: 0; font-weight: 500; color: #6b7280; font-size: 0.875rem; }
-        .page-empty-sub { font-size: 0.775rem !important; font-weight: 400 !important; color: #9ca3af !important; }
+        .page-empty { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 2rem 1rem 1.5rem; text-align: center; background: white; border-radius: 16px; border: 1px solid #f0f0f5; }
+        .page-empty-icon { width: 64px; height: 64px; border-radius: 16px; background: #f4f4fc; display: flex; align-items: center; justify-content: center; margin-bottom: 0.25rem; }
+        .page-empty p { margin: 0; font-weight: 600; color: #374151; font-size: 0.875rem; }
+        .page-empty-sub { font-size: 0.775rem !important; font-weight: 400 !important; color: #9ca3af !important; max-width: 240px; line-height: 1.5; }
         .tx-list { display: flex; flex-direction: column; gap: 0.5rem; }
         .tx-card { display: flex; align-items: center; justify-content: space-between; background: white; border-radius: 12px; padding: 0.875rem 1rem; border: 1px solid #f3f4f6; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
         .tx-info { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
