@@ -109,7 +109,17 @@ export default function BottomNav({ isAdmin }: BottomNavProps) {
           transition: color 0.15s;
           position: relative;
           -webkit-tap-highlight-color: transparent;
+          touch-action: manipulation;
           min-height: 56px;
+        }
+
+        .bottom-nav-item:active {
+          color: rgba(255,255,255,0.85);
+          background: rgba(255,255,255,0.07);
+        }
+
+        .bottom-nav-item:active .bottom-nav-icon {
+          transform: scale(0.88);
         }
 
         .bottom-nav-item::before {

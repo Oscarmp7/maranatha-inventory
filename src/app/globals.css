@@ -34,11 +34,31 @@
   box-sizing: border-box;
 }
 
+/* Eliminate 300ms tap delay on all interactive elements */
+a, button, input, select, textarea, label,
+[role="button"], [role="link"], [role="tab"],
+[tabindex] {
+  touch-action: manipulation;
+}
+
+/* Remove tap highlight flash — use explicit :active styles instead */
+a, button, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
   background: var(--color-surface);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  /* Prevent accidental text selection during fast taps */
+  -webkit-touch-callout: none;
+}
+
+/* Instant press feedback on links and buttons */
+a:active, button:active {
+  opacity: 0.75;
+  transition: opacity 0.05s;
 }
 
 /* PWA safe area */
