@@ -31,9 +31,9 @@ export default async function ProductsPage() {
 
       {active.length === 0 && inactive.length === 0 ? (
         <div className="page-empty">
-          <svg viewBox="0 0 48 48" fill="none" aria-hidden="true" width="48" height="48">
-            <rect x="8" y="8" width="32" height="32" rx="4" stroke="#d1d5db" strokeWidth="2"/>
-            <path d="M16 20h16M16 28h10" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"/>
+          <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <rect x="8" y="8" width="32" height="32" rx="6" stroke="#d1d5db" strokeWidth="2"/>
+            <path d="M16 20h16M16 27h10" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"/>
           </svg>
           <p>No hay productos registrados.</p>
           <p className="page-empty-sub">Importa el inventario desde el Excel para comenzar.</p>
