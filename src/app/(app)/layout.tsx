@@ -23,11 +23,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {/* Top bar */}
       <header className="app-header">
         <div className="app-header-brand">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" width="22" height="22">
-            <rect width="24" height="24" rx="6" fill="#0A0A63"/>
-            <path d="M6 17V7l6 4.5L18 7v10" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <span>MaranaTha</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/icon-dark.png" alt="" width="28" height="28" className="brand-icon" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/logo-dark.png" alt="Maranatha" height="22" className="brand-wordmark" />
         </div>
         <div className="app-header-right">
           <span className="app-header-user">{profile?.name ?? user.email}</span>
@@ -83,10 +82,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          font-size: 0.95rem;
-          font-weight: 700;
-          letter-spacing: 0.01em;
-          color: white;
+        }
+
+        .brand-icon {
+          object-fit: contain;
+          flex-shrink: 0;
+        }
+
+        .brand-wordmark {
+          object-fit: contain;
+          max-width: 130px;
         }
 
         .app-header-right {
