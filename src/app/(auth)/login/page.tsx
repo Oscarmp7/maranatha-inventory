@@ -19,12 +19,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="login-logo">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/icon-color.png" alt="" width="44" height="44" className="login-logo-icon" />
-          <div>
-            <p className="login-logo-sub">Suplidora</p>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/logo-color.png" alt="Maranatha" height="24" className="login-logo-wordmark" />
-          </div>
+          <img src="/brand/logo-color.png" alt="Maranatha" height="32" className="login-logo-wordmark" />
         </div>
 
         <p className="login-headline">Sistema de Inventario</p>
@@ -139,30 +134,14 @@ export default function LoginPage() {
 
         .login-logo {
           display: flex;
-          align-items: center;
-          gap: 0.75rem;
+          flex-direction: column;
+          gap: 0.25rem;
           margin-bottom: 1.5rem;
-        }
-
-        .login-logo-icon {
-          object-fit: contain;
-          flex-shrink: 0;
-          border-radius: 8px;
         }
 
         .login-logo-wordmark {
           object-fit: contain;
-          max-width: 160px;
-        }
-
-        .login-logo-sub {
-          font-size: 0.7rem;
-          font-weight: 500;
-          color: #6b7280;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          margin: 0;
-          line-height: 1;
+          max-width: 180px;
         }
 
         .login-headline {

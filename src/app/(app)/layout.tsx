@@ -24,9 +24,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <header className="app-header">
         <div className="app-header-brand">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/icon-dark.png" alt="" width="28" height="28" className="brand-icon" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/logo-dark.png" alt="Maranatha" height="22" className="brand-wordmark" />
+          <img src="/brand/logo-dark.png" alt="Maranatha" height="26" className="brand-wordmark" />
         </div>
         <div className="app-header-right">
           <span className="app-header-user">{profile?.name ?? user.email}</span>
@@ -82,11 +80,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           display: flex;
           align-items: center;
           gap: 0.5rem;
-        }
-
-        .brand-icon {
-          object-fit: contain;
-          flex-shrink: 0;
         }
 
         .brand-wordmark {
