@@ -1,9 +1,9 @@
 'use client'
 
-import { useActionState, useState, useMemo, useTransition } from 'react'
+import { useActionState, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createSale } from '@/app/actions/sales'
-import { createProductQuick, type QuickProductResult } from '@/app/actions/products'
+import type { QuickProductResult } from '@/app/actions/products'
 
 type ProductRow = QuickProductResult
 
@@ -11,14 +11,10 @@ interface Props {
   products: ProductRow[]
 }
 
-const BASE_UNITS = ['unidad', 'metro', 'kg', 'litro', 'rollo', 'resma', 'par']
-const PACKAGE_TYPES = ['caja', 'paquete', 'docena', 'bolsa', 'bandeja']
-
-export default function SaleForm({ products: initialProducts }: Props) {
+export default function SaleForm({ products }: Props) {
   const router = useRouter()
   const [error, formAction, isPending] = useActionState(createSale, null)
 
-  const [allProducts, setAllProducts] = useState(initialProducts)
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<ProductRow | null>(null)
   const [showList, setShowList] = useState(false)
@@ -27,28 +23,16 @@ export default function SaleForm({ products: initialProducts }: Props) {
   const [price, setPrice] = useState('')
   const [date] = useState(() => new Date().toISOString().split('T')[0])
 
-  const [showCreate, setShowCreate] = useState(false)
-  const [createError, setCreateError] = useState<string | null>(null)
-  const [isCreating, startCreating] = useTransition()
-  const [newName, setNewName] = useState('')
-  const [newCode, setNewCode] = useState('')
-  const [newBrand, setNewBrand] = useState('')
-  const [newSpec, setNewSpec] = useState('')
-  const [newColor, setNewColor] = useState('')
-  const [newUnit, setNewUnit] = useState('unidad')
-  const [newPackageType, setNewPackageType] = useState('')
-  const [newUnitsPerPkg, setNewUnitsPerPkg] = useState('')
-
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim()
-    if (!q) return allProducts.slice(0, 20)
-    return allProducts.filter(p =>
+    if (!q) return products.slice(0, 20)
+    return products.filter(p =>
       p.name.toLowerCase().includes(q) ||
       p.code.toLowerCase().includes(q) ||
       p.specification?.toLowerCase().includes(q) ||
       p.color?.toLowerCase().includes(q)
     ).slice(0, 15)
-  }, [allProducts, query])
+  }, [products, query])
 
   const unitOrdered = selected
     ? (usePackage && selected.package_type ? selected.package_type : selected.base_unit)
@@ -75,7 +59,6 @@ export default function SaleForm({ products: initialProducts }: Props) {
     setShowList(false)
     setUsePackage(false)
     setQty('')
-    setShowCreate(false)
   }
 
   function handleClear() {
@@ -84,38 +67,6 @@ export default function SaleForm({ products: initialProducts }: Props) {
     setUsePackage(false)
     setQty('')
     setPrice('')
-    setShowCreate(false)
-  }
-
-  function openCreate() {
-    setNewName(query.trim())
-    setShowCreate(true)
-    setShowList(false)
-  }
-
-  function handleCreateProduct() {
-    startCreating(async () => {
-      setCreateError(null)
-      const result = await createProductQuick({
-        name: newName, code: newCode, brand_name: newBrand,
-        specification: newSpec, color: newColor, base_unit: newUnit,
-        package_type: newPackageType, units_per_package: newUnitsPerPkg,
-      })
-      if ('error' in result) {
-        setCreateError(result.error)
-      } else {
-        setAllProducts(prev => [...prev, result.product])
-        handleSelect(result.product)
-        setShowCreate(false)
-        resetCreateForm()
-      }
-    })
-  }
-
-  function resetCreateForm() {
-    setNewName(''); setNewCode(''); setNewBrand(''); setNewSpec('')
-    setNewColor(''); setNewUnit('unidad'); setNewPackageType(''); setNewUnitsPerPkg('')
-    setCreateError(null)
   }
 
   return (
@@ -132,7 +83,7 @@ export default function SaleForm({ products: initialProducts }: Props) {
             className={`input ${selected ? 'input-selected' : ''}`}
             placeholder="Buscar por nombre, código, color..."
             value={query}
-            onChange={e => { setQuery(e.target.value); setShowList(true); if (selected) setSelected(null); setShowCreate(false) }}
+            onChange={e => { setQuery(e.target.value); setShowList(true); if (selected) setSelected(null) }}
             onFocus={() => !selected && setShowList(true)}
             autoComplete="off"
             readOnly={!!selected}
@@ -143,9 +94,12 @@ export default function SaleForm({ products: initialProducts }: Props) {
             </button>
           )}
         </div>
-        {showList && !selected && filtered.length > 0 && (
+
+        {showList && !selected && (
           <div className="product-list" onMouseDown={e => e.preventDefault()}>
-            {filtered.map(p => (
+            {filtered.length === 0 ? (
+              <div className="list-empty">Sin resultados para "{query}"</div>
+            ) : filtered.map(p => (
               <button key={p.id} type="button" className="product-item" onClick={() => handleSelect(p)}>
                 <span className="item-name">{p.name}</span>
                 <span className="item-meta">
@@ -157,89 +111,17 @@ export default function SaleForm({ products: initialProducts }: Props) {
           </div>
         )}
 
-        {!selected && !showCreate && (
-          <button type="button" className="add-product-btn-static" onClick={openCreate}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-            {query.trim() && filtered.length === 0
-              ? `Añadir "${query.trim()}" como nuevo producto`
-              : 'Añadir nuevo producto'}
-          </button>
-        )}
         {selected && (
           <div className="selected-chip">
             <span className="chip-code">{selected.code}</span>
             {selected.specification && <span className="chip-spec">{selected.specification}</span>}
             {selected.color && <span className="chip-color">{selected.color}</span>}
-            <span className={`chip-stock ${selected.current_stock <= 0 ? 'stock-zero' : ''}`}>
+            <span className={`chip-stock ${selected.current_stock <= 0 ? 'stock-zero-chip' : ''}`}>
               {selected.current_stock} {selected.base_unit}s disponibles
             </span>
           </div>
         )}
       </div>
-
-      {showCreate && (
-        <div className="create-card">
-          <div className="create-header">
-            <span className="create-title">Nuevo producto</span>
-            <button type="button" className="create-close" onClick={() => { setShowCreate(false); resetCreateForm() }}>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
-            </button>
-          </div>
-          <div className="create-grid">
-            <div className="field full">
-              <label className="label">Nombre *</label>
-              <input type="text" className="input" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ej. Folder Manila" />
-            </div>
-            <div className="field">
-              <label className="label">Marca</label>
-              <input type="text" className="input" value={newBrand} onChange={e => setNewBrand(e.target.value)} placeholder="Ej. Acco" />
-            </div>
-            <div className="field">
-              <label className="label">Código</label>
-              <input type="text" className="input" value={newCode} onChange={e => setNewCode(e.target.value)} placeholder="Auto si vacío" />
-            </div>
-            <div className="field full">
-              <label className="label">Especificación / tamaño</label>
-              <input type="text" className="input" value={newSpec} onChange={e => setNewSpec(e.target.value)} placeholder="Ej. Tamaño carta, 3 pulgadas" />
-            </div>
-            <div className="field">
-              <label className="label">Color</label>
-              <input type="text" className="input" value={newColor} onChange={e => setNewColor(e.target.value)} placeholder="Ej. Azul" />
-            </div>
-            <div className="field">
-              <label className="label">Unidad base *</label>
-              <select className="input" value={newUnit} onChange={e => setNewUnit(e.target.value)}>
-                {BASE_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-                <option value="_other">otra...</option>
-              </select>
-              {newUnit === '_other' && (
-                <input type="text" className="input mt-1" placeholder="Escribe la unidad" onChange={e => setNewUnit(e.target.value)} autoFocus />
-              )}
-            </div>
-          </div>
-          <div className="pkg-section">
-            <label className="label">Viene en paquete / caja?</label>
-            <div className="pkg-row">
-              <div className="field" style={{flex: 1}}>
-                <select className="input" value={newPackageType} onChange={e => setNewPackageType(e.target.value)}>
-                  <option value="">No aplica</option>
-                  {PACKAGE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </div>
-              {newPackageType && (
-                <div className="field" style={{flex: 1}}>
-                  <input type="number" className="input" placeholder={`Unidades por ${newPackageType}`}
-                    value={newUnitsPerPkg} onChange={e => setNewUnitsPerPkg(e.target.value)} min="1" inputMode="numeric" />
-                </div>
-              )}
-            </div>
-          </div>
-          {createError && <div className="form-error">{createError}</div>}
-          <button type="button" className="create-submit" onClick={handleCreateProduct} disabled={isCreating || !newName.trim()}>
-            {isCreating ? 'Creando...' : 'Crear y seleccionar'}
-          </button>
-        </div>
-      )}
 
       {selected?.package_type && (
         <div className="field">
@@ -312,10 +194,8 @@ export default function SaleForm({ products: initialProducts }: Props) {
       <style>{`
         .pf { display: flex; flex-direction: column; gap: 1rem; }
         .field { display: flex; flex-direction: column; gap: 0.35rem; }
-        .full { grid-column: 1 / -1; }
         .label { font-size: 0.78rem; font-weight: 600; color: #374151; letter-spacing: 0.01em; }
         .opt { font-weight: 400; color: #9ca3af; }
-        .mt-1 { margin-top: 0.35rem; }
 
         .search-wrap { position: relative; }
         .input {
@@ -326,7 +206,6 @@ export default function SaleForm({ products: initialProducts }: Props) {
         }
         .input:focus { border-color: #0A0A63; }
         .input-selected { background: #f8f9ff; border-color: #c7d2fe; cursor: default; }
-        select.input { cursor: pointer; }
         .clear-btn {
           position: absolute; right: 0.6rem; top: 50%; transform: translateY(-50%);
           background: #f3f4f6; border: none; border-radius: 50%; width: 28px; height: 28px;
@@ -349,42 +228,15 @@ export default function SaleForm({ products: initialProducts }: Props) {
         .item-name { font-size: 0.875rem; font-weight: 500; color: #111827; }
         .item-meta { font-size: 0.7rem; color: #9ca3af; }
         .stock-zero { color: #ef4444 !important; }
-        .add-product-btn-static {
-          display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.875rem;
-          width: 100%; background: #f0f4ff; border: 1.5px dashed #c7d2fe;
-          border-radius: 10px; text-align: left; cursor: pointer; font-size: 0.825rem;
-          font-weight: 600; color: #0A0A63; font-family: 'DM Sans', sans-serif;
-          touch-action: manipulation; margin-top: 0.25rem; transition: background 0.15s;
-        }
-        .add-product-btn-static:active { background: #e0e7ff; }
 
         .selected-chip {
           display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem;
-          padding: 0.4rem 0.7rem; background: #eff6ff; border-radius: 6px; margin-top: 0.15rem;
+          padding: 0.4rem 0.7rem; background: #f0fdf4; border-radius: 6px; margin-top: 0.15rem;
         }
-        .chip-code { font-size: 0.68rem; font-weight: 700; color: #0A0A63; text-transform: uppercase; letter-spacing: 0.05em; }
+        .chip-code { font-size: 0.68rem; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: 0.05em; }
         .chip-spec, .chip-color { font-size: 0.7rem; color: #4b5563; background: white; border-radius: 4px; padding: 0.1rem 0.4rem; }
         .chip-stock { font-size: 0.7rem; color: #6b7280; margin-left: auto; }
-
-        .create-card {
-          background: #f8faff; border: 1.5px solid #dbeafe; border-radius: 12px;
-          padding: 1rem; display: flex; flex-direction: column; gap: 0.875rem;
-        }
-        .create-header { display: flex; align-items: center; justify-content: space-between; }
-        .create-title { font-size: 0.85rem; font-weight: 700; color: #0A0A63; }
-        .create-close {
-          background: none; border: none; cursor: pointer; color: #9ca3af; padding: 4px;
-          display: flex; align-items: center; touch-action: manipulation;
-        }
-        .create-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.625rem; }
-        .pkg-section { display: flex; flex-direction: column; gap: 0.35rem; }
-        .pkg-row { display: flex; gap: 0.625rem; }
-        .create-submit {
-          width: 100%; padding: 0.75rem; background: #0A0A63; color: white; border: none;
-          border-radius: 10px; font-size: 0.875rem; font-weight: 600;
-          font-family: 'DM Sans', sans-serif; cursor: pointer; touch-action: manipulation; transition: opacity 0.15s;
-        }
-        .create-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+        .stock-zero-chip { color: #ef4444 !important; font-weight: 600; }
 
         .unit-toggle { display: flex; gap: 0.5rem; }
         .unit-btn {
@@ -393,7 +245,7 @@ export default function SaleForm({ products: initialProducts }: Props) {
           font-family: 'DM Sans', sans-serif; text-align: center; line-height: 1.3;
           transition: all 0.15s; touch-action: manipulation;
         }
-        .unit-btn.active { border-color: #0A0A63; background: #0A0A63; color: white; font-weight: 600; }
+        .unit-btn.active { border-color: #059669; background: #059669; color: white; font-weight: 600; }
         .unit-btn small { font-size: 0.68rem; opacity: 0.8; }
 
         .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
@@ -427,7 +279,7 @@ export default function SaleForm({ products: initialProducts }: Props) {
           border-radius: 8px; padding: 0.65rem 0.875rem; font-size: 0.825rem;
         }
         .submit-btn {
-          width: 100%; padding: 0.875rem; background: #0A0A63; color: white; border: none;
+          width: 100%; padding: 0.875rem; background: #059669; color: white; border: none;
           border-radius: 12px; font-size: 0.95rem; font-weight: 600;
           font-family: 'DM Sans', sans-serif; cursor: pointer; transition: opacity 0.15s;
           margin-top: 0.25rem; touch-action: manipulation;
