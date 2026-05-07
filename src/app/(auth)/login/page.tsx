@@ -18,15 +18,12 @@ export default function LoginPage() {
       <div className="login-card">
         {/* Logo */}
         <div className="login-logo">
-          <div className="login-logo-mark">
-            <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
-              <rect width="32" height="32" rx="8" fill="#0A0A63" />
-              <path d="M8 22V10l8 6 8-6v12" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/icon-color.png" alt="" width="44" height="44" className="login-logo-icon" />
           <div>
             <p className="login-logo-sub">Suplidora</p>
-            <h1 className="login-logo-name">MaranaTha</h1>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/logo-color.png" alt="Maranatha" height="24" className="login-logo-wordmark" />
           </div>
         </div>
 
@@ -147,11 +144,15 @@ export default function LoginPage() {
           margin-bottom: 1.5rem;
         }
 
-        .login-logo-mark svg {
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
-          box-shadow: 0 4px 12px rgba(10,10,99,0.3);
+        .login-logo-icon {
+          object-fit: contain;
+          flex-shrink: 0;
+          border-radius: 8px;
+        }
+
+        .login-logo-wordmark {
+          object-fit: contain;
+          max-width: 160px;
         }
 
         .login-logo-sub {
@@ -162,15 +163,6 @@ export default function LoginPage() {
           letter-spacing: 0.08em;
           margin: 0;
           line-height: 1;
-        }
-
-        .login-logo-name {
-          font-family: 'Playfair Display', serif;
-          font-size: 1.3rem;
-          font-weight: 600;
-          color: #0A0A63;
-          margin: 0;
-          line-height: 1.2;
         }
 
         .login-headline {
