@@ -4,12 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 
-const DIRECT_ROUTES: Record<string, { href: string; label: string }> = {
-  '/purchases': { href: '/purchases/new', label: 'Nueva compra' },
-  '/sales':     { href: '/sales/new',     label: 'Nueva venta'  },
-}
-
-const SPEED_DIAL_ROUTES = ['/dashboard']
+const FAB_ROUTES = ['/dashboard', '/purchases', '/sales', '/products']
 
 const SPEED_DIAL_ITEMS = [
   { href: '/purchases/new', label: 'Nueva compra', accent: '#0A0A63' },
@@ -24,24 +19,9 @@ export default function FAB() {
 
   if (pathname.endsWith('/new')) return null
 
-  const directMatch = Object.entries(DIRECT_ROUTES).find(
-    ([route]) => pathname === route || pathname.startsWith(route + '/')
-  )
-  const isSpeedDial = SPEED_DIAL_ROUTES.some(r => pathname === r)
+  const isVisible = FAB_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))
 
-  if (!directMatch && !isSpeedDial) return null
-
-  if (directMatch) {
-    const [, { href, label }] = directMatch
-    return (
-      <>
-        <Link href={href} className="fab" aria-label={label}>
-          <PlusIcon />
-        </Link>
-        <FabStyles />
-      </>
-    )
-  }
+  if (!isVisible) return null
 
   return (
     <>
